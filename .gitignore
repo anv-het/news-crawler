@@ -1,0 +1,11 @@
+*.json/
+
+*.log/
+*logs/
+
+*.pyc/
+*__pycache__/
+
+*.csv/
+
+*data/
