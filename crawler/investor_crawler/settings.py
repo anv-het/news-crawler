@@ -115,6 +115,7 @@ if _env_bool("SAVE_TO_MONGO", "true") and _env_bool("MONGO_ENABLED", "true"):
 # ---------------------------------------------------------------------------
 LOG_ENABLED = _env_bool("LOG_ENABLED", "true")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+LOGSTATS_INTERVAL = 30  # Print crawl stats every 30 seconds
 
 _log_to_file = _env_bool("LOG_TO_FILE", "true")
 if _log_to_file:
@@ -160,6 +161,9 @@ DATA_JSON_PATH = os.getenv("DATA_JSON_PATH", "DATA/JSON/")
 ROTATING_USER_AGENT = _env_bool("ROTATING_USER_AGENT", "true")
 CAPTCHA_DETECTION = _env_bool("CAPTCHA_DETECTION", "true")
 RETRY_ON_CAPTCHA = _env_bool("RETRY_ON_CAPTCHA", "true")
+
+# Skip already downloaded queries
+SKIP_ALREADY_DOWNLOADED = _env_bool("SKIP_ALREADY_DOWNLOADED", "false")
 
 # Request fingerprinting (Scrapy 2.7+)
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"

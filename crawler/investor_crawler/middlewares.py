@@ -10,7 +10,6 @@ Middlewares:
 """
 
 import random
-import time
 import logging
 from scrapy import signals
 from scrapy.http import HtmlResponse
@@ -154,18 +153,20 @@ class CaptchaDetectionMiddleware:
         )
 
         if self.retry_on_captcha and retry_count < self.max_retries:
-            # Wait before retry (longer each time)
-            wait_time = random.uniform(5, 15) * (retry_count + 1)
-            logger.info(
-                f"Waiting {wait_time:.1f}s before CAPTCHA retry for {request.url}"
-            )
-            time.sleep(wait_time)
-
-            # Retry with a different User-Agent
+            # Retry with a different User-Agent.
+            # The download delay between requests is handled by Scrapy's
+            # DOWNLOAD_DELAY + AutoThrottle — no time.sleep() needed.
             retry_request = request.copy()
             retry_request.meta["captcha_retry_count"] = retry_count + 1
+            retry_request.meta["download_slot"] = f"captcha_retry_{retry_count}"
             retry_request.headers["User-Agent"] = random.choice(USER_AGENT_POOL)
             retry_request.dont_filter = True
+            # Use Scrapy's download_delay meta to add extra delay
+            retry_request.meta["download_delay"] = random.uniform(5, 15) * (retry_count + 1)
+            logger.info(
+                f"CAPTCHA retry #{retry_count + 1} for {request.url} "
+                f"(delay: {retry_request.meta['download_delay']:.1f}s)"
+            )
             return retry_request
 
         # Mark response as captcha-blocked for spider to handle
@@ -214,12 +215,14 @@ class LongDelayMiddleware:
             self.long_delay_after_count > 0
             and self.request_count % self.long_delay_after_count == 0
         ):
+            # Use Scrapy's download_delay meta to apply the long delay
+            # without blocking the Twisted reactor.
             delay = random.uniform(self.long_delay_min, self.long_delay_max)
+            request.meta["download_delay"] = delay
             logger.info(
                 f"Long delay after {self.request_count} requests: "
-                f"sleeping {delay:.1f}s"
+                f"{delay:.1f}s (via download_delay meta)"
             )
-            time.sleep(delay)
         # Note: Normal per-request delay is handled by Scrapy's
         # DOWNLOAD_DELAY + RANDOMIZE_DOWNLOAD_DELAY settings
 

@@ -9,3 +9,8 @@
 *.csv/
 
 *data/
+
+scrapy/data/
+crawled/data/
+scrapy/logs/
+crawled/logs/
